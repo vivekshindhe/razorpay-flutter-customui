@@ -12,6 +12,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
@@ -26,6 +27,8 @@ import com.razorpay.RazorpayWebViewClient;
 import com.razorpay.RzpUpiSupportedAppsCallback;
 
 import com.razorpay.SubscriptionAmountCallback;
+import com.razorpay.UpiTurboLinkAccountListener;
+import com.razorpay.UpiTurboLinkAction;
 import com.razorpay.ValidateVpaCallback;
 import com.razorpay.ValidationListener;
 
@@ -42,13 +45,15 @@ import io.flutter.plugin.common.PluginRegistry.ActivityResultListener;
 
 import static com.razorpay.flutter_customui.Constants.PAYMENT_DATA;
 
-public class RazorpayDelegate implements ActivityResultListener {
+public class RazorpayDelegate implements ActivityResultListener, UpiTurboLinkAccountListener {
 
     private Activity activity;
     private Result pendingResult;
     private Map<Object, Object> pendingReply;
     private Razorpay razorpay;
     private String key;
+
+    private UpiTurboLinkAction linkAction;
 
     private static final int CODE_PAYMENT_SUCCESS = 0;
     private static final int CODE_PAYMENT_ERROR = 1;
@@ -70,6 +75,7 @@ public class RazorpayDelegate implements ActivityResultListener {
         this.key = key;
         this.pendingResult = result;
         razorpay = new Razorpay(activity,key);
+
     }
 
     void submit(final JSONObject payload, Result result) {
@@ -313,4 +319,57 @@ public class RazorpayDelegate implements ActivityResultListener {
 
     public void onNewIntent(Intent intent) {}
 
+    void linkNewUpiAccount(String mobileNumber, Result result){
+        this.pendingResult = result;
+        razorpay.upiTurbo.linkNewUpiAccount(mobileNumber, this);
+    }
+
+    void askForPermission(Result result){
+        this.pendingResult = result;
+        if (linkAction !=null){
+            linkAction.requestPermission();
+        }
+    }
+
+    void selectedSim(){
+        linkAction.selectedSim(sim);
+    }
+
+    @Override
+    public void onResponse(@NonNull UpiTurboLinkAction upiTurboLinkAction) {
+        HashMap<Object, Object> reply = new HashMap<>();
+
+        this.linkAction = upiTurboLinkAction;
+        switch (upiTurboLinkAction){
+            case ASK_FOR_PERMISSION:
+                reply.put("action", upiTurboLinkAction.name());
+                reply.put("data", null);
+                //reply.put("error", "something error");
+                sendReply(reply);
+                break;
+            case SHOW_PERMISSION_ERROR:
+                break;
+            case SELECT_SIM:
+                reply.put("action", upiTurboLinkAction.name());
+                if (upiTurboLinkAction.getError()!=null){
+                    reply.put("error", upiTurboLinkAction.getError().toString());
+                    sendReply(reply);
+                    return;
+                }
+                reply.put("data", upiTurboLinkAction.getData());
+
+                sendReply(reply);
+                break;
+            case SELECT_BANK:
+                break;
+            case SELECT_BANK_ACCOUNT:
+                break;
+            case SETUP_UPI_PIN:
+                break;
+            case STATUS:
+                break;
+            case LOADER_DATA:
+                break;
+        }
+    }
 }

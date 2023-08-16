@@ -107,6 +107,12 @@ public class RazorpayPlugin implements FlutterPlugin, MethodCallHandler, Activit
         razorpayDelegate.setPaymentID(call.arguments.toString(), result);
         break;
 
+      case "upiTurbo.linkNewUpiAccount":
+        razorpayDelegate.linkNewUpiAccount(call.arguments.toString(), result);
+
+      case "linkNewUpiAccount.askForPermission":
+        razorpayDelegate.askForPermission(result);
+
       default:
         Log.d("RAZORPAY_SDK","no method");
     }

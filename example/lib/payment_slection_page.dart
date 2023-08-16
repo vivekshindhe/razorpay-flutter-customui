@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:razorpay_flutter_customui/razorpay_flutter_customui.dart';
 import 'package:razorpay_flutter_customui_example/models/card_info_model.dart';
 
-enum PaymentMethods { card, upi, nb, wallet, vas }
+enum PaymentMethods { card, upi, nb, wallet, vas, upiTurbo }
 
 class PaymentSelectionPage extends StatefulWidget {
   @override
@@ -38,6 +38,7 @@ class _PaymentSelectionPageState extends State<PaymentSelectionPage> {
     _razorpay = Razorpay();
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_UPI_TURBO, _linkNewUpiAccountResponse);
     _razorpay.initilizeSDK(key);
     fetchAllPaymentMethods();
 
@@ -112,6 +113,20 @@ class _PaymentSelectionPageState extends State<PaymentSelectionPage> {
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
     print('Payment Success Response : $response');
+  }
+
+  void _linkNewUpiAccountResponse(Map<dynamic, dynamic> response){
+    switch (response["action"]){
+      case "ASK_FOR_PERMISSION":
+        _razorpay.askForPermission();
+        break;
+      case "SELECT_SIM":
+        _razorpay.selectedSim();
+        break;
+      case "SELECT_BANK":
+        _razorpay.selectedBank();
+        break;
+    }
   }
 
   void _handlePaymentError(Map<dynamic, dynamic> response) {

@@ -10,6 +10,7 @@ class Razorpay {
   // Event names
   static const EVENT_PAYMENT_SUCCESS = 'payment.success';
   static const EVENT_PAYMENT_ERROR = 'payment.error';
+  static const EVENT_UPI_TURBO = "upiTurbo.linkNewUpiAccount";
 
   // Payment error codes
   static const NETWORK_ERROR = 0;
@@ -24,6 +25,7 @@ class Razorpay {
 
   // EventEmitter instance used for communication
   late EventEmitter _eventEmitter;
+
 
   Razorpay() {
     _eventEmitter = new EventEmitter();
@@ -86,6 +88,18 @@ class Razorpay {
   Future<Map<dynamic, dynamic>> isValidVpa(String vpa) async {
     final dynamic isValidVpa = await _channel.invokeMethod('isValidVpa', vpa);
     return isValidVpa;
+  }
+
+
+  void linkNewUpiAccount(String mobileNumber) async {
+    final dynamic response = await _channel.invokeMethod('upiTurbo.linkNewUpiAccount');
+
+    _eventEmitter.emit(EVENT_UPI_TURBO,response);
+  }
+
+  void askForPermission() async {
+    final dynamic response = await _channel.invokeMethod('linkNewUpiAccount.askForPermission');
+    _eventEmitter.emit(EVENT_UPI_TURBO, response);
   }
 
 
